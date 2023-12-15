@@ -1,0 +1,166 @@
+<?php
+include('../function.php');
+
+
+?>
+
+<?php
+// require("../connexion.php");
+if(isset($_POST['voix'])){
+    // $name=$_POST['name'];
+    $candidat=$_POST['candidat'];
+    $breau=$_POST['bureau'];
+    $voix=$_POST['voix'];
+//    je vérifie si on a déjà envoé les memes informations
+        $reponse=intval(verifyAlreadyInserted());
+        if($reponse===1){
+            echo("<script> alert('Déjà enrégistré');
+            document.Loacation.href='formPresident.php';
+            </script>");
+        }
+        else{
+            if($_FILES["image"]["error"]===4){
+                echo "<script> alert('l'image n'existe pas');</script>";
+            }
+            else
+            {
+                $fileName=$_FILES['image']['name'];
+                $fileSize=$_FILES['image']['size'];
+                $tmpName=$_FILES['image']['tmp_name'];
+                echo $tmpName;
+                $validImageExtension=['jpg','jpeg','png'];
+                $imgExtension=explode('.',$fileName);
+                $imgExtension=strtolower(end($imgExtension));
+                if(!in_array($imgExtension,$validImageExtension)){
+                    echo "<script> alert('le format d'image n'est pas pris en compte');</script>";
+        
+                }
+                if($fileSize>1000000){
+                echo "<script> alert('la taille de l'image est trop grande');</script>";
+        
+                }
+                else{
+                    $newImageName=uniqid();
+                    $newImageName.='.'. $imgExtension;
+                    move_uploaded_file($tmpName,'fichiers/'.$newImageName);
+                    echo $newImageName;
+                    $connect=new Connexion();
+                    $connexion=$connect->open();
+                    try{
+                       $requete=$connexion->prepare('INSERT INTO resultat(nbre_voix, id_bureau,num_cand,fichier) values(:voix,:bureau,:cand,:fic)');
+                       $requete->execute([
+                          
+                          'voix'=>intval($_POST['voix']),
+                          'bureau'=>intval($_POST['bureau']),
+                          'cand'=>intval($_POST['candidat']),
+                          'fic'=>$newImageName
+                          
+                       ]);
+                        echo "<script> alert('Enregistrement réussi');</script>";
+        
+                 
+                  
+                    }
+                    catch(Exception $e){
+                     echo "<script> alert('Une erreur lors de l'enregistrement du fichier');</script>";
+                    
+                    }
+        
+                }
+            }
+
+        }
+   
+}
+            
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="form1.css">
+    <title>formulaire</title>
+</head>
+
+<body class="d-flex justify-content-center align-items-center ">
+
+    <!-- header section starts      -->
+
+    <header>
+        <a href="#" class="logo"><i class="fas fa-computer"></i>Nom du parti</a>
+        <a href="formNationnaux.php" class="btn"></i>Migrer</a>
+
+    </header>
+    <!-- order section starts  -->
+
+    <section class="order " id="order">
+
+
+        <!-- <h3 class=" sub-heading "> Nous écrire</h3> -->
+        <h1 class="heading text-center"> Présidentielles</h1>
+
+        <form action="" enctype="multipart/form-data" method="post">
+            <div class="bord">
+
+                <img src="../assets/img/drapeau-republique-democratique-du-congo_1401-92.jpg" alt="">
+
+            </div>
+            <div class="inputBox ">
+                <div class="input ">
+                    <select name="candidat" id="" class="" aria-label="default select example" required>
+                        <option value="" selected>Sélectionner le candidat</option>
+                        <?php $presidents=getPresidents();
+                        foreach($presidents as $pr): ?>
+                        <option value="<?=$pr['numero']?>"><?=$pr['nom_cand'].' '.$pr['postnom_cand'].' '.$pr['prenom_cand']?></option>
+                        <?php endforeach ?>
+                    </select>
+                </div>
+                <div class="input ">
+                    <select name="bureau" id="" class="" aria-label="default select example" required>
+                        <option value="" selected>Bureau de vote concerné</option>
+                        <?php $presidents=getBureaux();
+                        foreach($presidents as $pr): ?>
+                        <option value="<?=$pr['bur']?>"><?=$pr['bureau']?></option>
+                        <?php endforeach ?>n>
+                    </select>
+                </div>
+            </div>
+            <div class="inputBox ">
+                <div class="input ">
+                    <span>nombre des voix</span>
+                    <input type="number" placeholder="Nombre de voix obtenus ici " name="voix" required>
+                </div>
+
+            </div>
+            <div class="inputBox ">
+                <div class="input ">
+                    <span>inserrer le fichier </span>
+                    <input type="file" name="image" required>
+                </div>
+
+            </div>
+            <!-- <div class="input ">
+                <span>la desription de l'article</span>
+                <textarea name=" " placeholder="Entrez le petit resumé de votre article ici " id=" " cols="30 " rows="10 "></textarea>
+            </div> -->
+            <div class="d-flex justify-content-between align-items-center">
+                <button type="submit"  class="btn">envoyer</button>
+            </div>
+           
+
+        </form>
+
+    </section>
+
+    <!-- order section ends -->
+
+    <script src="js/js/bootstrap.min.js"></script>
+    <script src="js/jquery-3.6.0.js"></script>
+</body>
+
+</html>
+
